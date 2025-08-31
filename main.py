@@ -8,7 +8,7 @@ client = OpenAI(api_key=OPENAI_KEY)
 
 def chatbot(query):
     completion = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-5",
         messages=[
             {"role": "system", "content": "Você é um especialista em Ciências Contábeis..."},
             {"role": "user", "content": query}
