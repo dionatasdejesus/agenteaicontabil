@@ -41,13 +41,5 @@ def main():
 if __name__ == "__main__":
     main()
 
-    from chat_history import load_history, save_history
-
-# Carrega histórico
-if "mensagens" not in st.session_state:
-    st.session_state.mensagens = load_history()
-
-# Após adicionar nova mensagem:
-save_history(st.session_state.mensagens)
-
+ 
 
