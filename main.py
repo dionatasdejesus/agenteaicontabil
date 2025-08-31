@@ -1,64 +1,53 @@
-from dotenv import load_dotenv
-from openai import OpenAI
 import streamlit as st
-import os 
+from openai import OpenAI
 
-load_dotenv()
+st.set_page_config(page_title="Agente Josi Cajá", page_icon="☤", layout="centered")
 
-OPENAI_KEY = os.getenv("openai_key")
-
-client = OpenAI(api_key="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")
+OPENAI_KEY = st.secrets["openai_key"]
+client = OpenAI(api_key=OPENAI_KEY)
 
 def chatbot(query):
     completion = client.chat.completions.create(
-        model = "gpt-5",
-        messages = [{"role": "system", "content": "Você é um especialista em Ciências Contábeis e Rotinas Contábeis, com amplo conhecimento nos setores administrativo, fiscal, pessoal e contábil e boas práticas da contabilidade.Sua missão é ajudar os colaboradores da empresa Josi Cajá Contabilidade e seus clientes e pontenciais clientes a resolver dúvidas, oferecer sugestões claras e eficientes, explicar conceitos complexos de forma acessível e detalhada, fornecendo orientações práticas para problemas do dia a dia na administração de empresa e na contabilidade. Você é preciso, objetivo e adaptável, ajustando suas respostas ao nível de experiência do usuário, seja iniciante ou avançado. Quando necessário, forneça exemplos e explique o passo a passo das dúvidas envidas. Se questionado sobre valor de honorários, sempre responda que cada empresa possui uma realidade diferente, sendo mensurado da maneira mais justa possível e por esse motivo precisa ser tratato diretamente com a Josi Contadora. Evite respostas vagas e busque sempre ser didático e completo, mas sem ser excessivamente prolixo."},
-            {"role":"user", "content": query}
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "Você é um especialista em Ciências Contábeis..."},
+            {"role": "user", "content": query}
         ]
     )
-
     return completion.choices[0].message.content
 
-# Função principal do Streamlit
-
 def main():
-    # Inicializa o hstórico de mensagens
-    if 'mensages' not in st.session_state:
+    st.title("☤ Agente Josi Cajá Contabilidade ☤")
+    st.markdown("Bem-vindo! Digite sua dúvida contábil abaixo 👇")
+
+    if "mensagens" not in st.session_state:
         st.session_state.mensagens = []
 
-    mensagens = st.session_state.mensagens
+    for msg in st.session_state.mensagens:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-    #Titulo do Chat
-    st.header('☤ Agente Josi Cajá Contabilidade ☤')
+    user_input = st.chat_input("Digite sua mensagem")
+    if user_input:
+        st.session_state.mensagens.append({"role": "user", "content": user_input})
+        with st.chat_message("user"):
+            st.markdown(user_input)
 
-    #Renderiza as mensagens anteriores
+        resposta = chatbot(user_input)
+        st.session_state.mensagens.append({"role": "assistant", "content": resposta})
+        with st.chat_message("assistant"):
+            st.markdown(resposta)
 
-    for mensagem in mensagens:
-        chat = st.chat_message(mensagem["role"])
-        chat.markdown(mensagem["content"])
+if __name__ == "__main__":
+    main()
 
-#Entrada do Usuário
-    message = st.chat_input('Bem vindo! Digite sua mensagem')
-    if message:
-        nova_mensagem = {'role': "user" , 'content': message}
-        mensagens.append(nova_mensagem) 
+    from chat_history import load_history, save_history
 
-        chat = st.chat_message('user')
-        chat.markdown(message)
+# Carrega histórico
+if "mensagens" not in st.session_state:
+    st.session_state.mensagens = load_history()
 
-        resposta = chatbot(message)
+# Após adicionar nova mensagem:
+save_history(st.session_state.mensagens)
 
-        resposta_mensagem = {'role' :  'assistant' , 'content' :  resposta}
-        mensagens.append(resposta_mensagem)
-
-        chat = st.chat_message('assistant')
-        chat.markdown(resposta)
-
-        #Atualiza o histórico na sessão
-
-        st.session_state.mensagens = mensagens
-
-        #Execuar a aplicação
-    if __name__== '__main__' :
-        main()
 
